@@ -1,19 +1,18 @@
 package bt.bpc.retrofitpostexample;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
+import okhttp3.ResponseBody;
+import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener  {
     //Declaring views
@@ -25,7 +24,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button buttonRegister;
 
     //This is our root url
-    public static final String ROOT_URL = "http://localhost/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,61 +41,65 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    private void insertUser(){
-        //Here we will handle the http request to insert user to mysql db
-        //Creating a RestAdapter
 
-        RestAdapter adapter = new RestAdapter.Builder()
-                .setEndpoint(ROOT_URL) //Setting the Root URL
-                .build(); //Finally building the adapter
+    private  void insertUser(){
 
-        //Creating object for our interface
-        RegisterAPI api = adapter.create(RegisterAPI.class);
+
+
 
         //Defining the method insertuser of our interface
-        api.insertUser(
+
 
                 //Passing the values by getting it from editTexts
-                editTextName.getText().toString(),
-                editTextUsername.getText().toString(),
-                editTextPassword.getText().toString(),
-                editTextEmail.getText().toString(),
+                 String name = editTextName.getText().toString().trim();
+               String username = editTextUsername.getText().toString().trim();
+               String password = editTextPassword.getText().toString().trim();
+               String email =  editTextEmail.getText().toString().trim();
 
-                //Creating an anonymous callback
-                new Callback<Response>() {
-                    @Override
-                    public void success(Response result, Response response) {
-                        //On success we will read the server's output using bufferedreader
-                        //Creating a bufferedreader object
-                        BufferedReader reader = null;
+        if (name.isEmpty()) {
+            editTextName.setError("name is required");
+            editTextName.requestFocus();
+        }
+        if (username.isEmpty()){
+            editTextUsername.setError("username is required");
+            editTextUsername.requestFocus();
+        }
+        if (password.isEmpty()){
+            editTextPassword.setError("password is required");
+            editTextPassword.requestFocus();
+        }
+        if (email.isEmpty()){
+            editTextEmail.setError("email is required");
+            editTextEmail.requestFocus();
 
-                        //An string to store output from the server
-                        String output = "";
+        }
 
-                        try {
-                            //Initializing buffered reader
-                            reader = new BufferedReader(new InputStreamReader(result.getBody().in()));
+        Call<ResponseBody> call = RetrofitClient.getInstance().getApi().insertUser(name,username, password,email);
+call.enqueue(new Callback<ResponseBody>() {
+    @Override
+    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+        String s = null;
+        try {
+            s = response.body().string();
+            System.out.print("Response:" +s);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-                            //Reading the output in the string
-                            output = reader.readLine();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                        //Displaying the output as a toast
-                        Toast.makeText(MainActivity.this, output, Toast.LENGTH_LONG).show();
-                    }
-
-                    @Override
-                    public void failure(RetrofitError error) {
-                        //If any error occured displaying the error as toast
-                        Toast.makeText(MainActivity.this, error.toString(),Toast.LENGTH_LONG).show();
-                    }
-                }
-        );
+//                Toast.makeText(MainActivity.this,s,Toast.LENGTH_LONG).show();
     }
 
-    //Overriding onclick method
+    @Override
+    public void onFailure(Call<ResponseBody> call, Throwable t) {
+        Toast.makeText(MainActivity.this,t.getMessage(),Toast.LENGTH_LONG).show();
+    }
+});
+
+
+    }
+
+
+
     @Override
     public void onClick(View v) {
         //Calling insertUser on button click
