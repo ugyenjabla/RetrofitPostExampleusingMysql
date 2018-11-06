@@ -81,12 +81,12 @@ call.enqueue(new Callback<ResponseBody>() {
         String s = null;
         try {
             s = response.body().string();
-            System.out.print("Response:" +s);
+            Toast.makeText(MainActivity.this,s,Toast.LENGTH_LONG).show();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-//                Toast.makeText(MainActivity.this,s,Toast.LENGTH_LONG).show();
+
     }
 
     @Override
